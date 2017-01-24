@@ -4,10 +4,12 @@ import java.util.Arrays;
 
 import org.oastem.frc.LogitechGamingPad;
 import org.oastem.frc.control.TalonDriveSystem;
+import org.oastem.frc.sensor.LVMaxSonarEZUltrasonic;
 
-import edu.wpi.cscore.UsbCamera;
+import edu.wpi.cscore.AxisCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.SampleRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -33,6 +35,8 @@ public class Robot extends SampleRobot {
 	private final int FRONT_RIGHT_CAN_DRIVE = 2;
 	private final int BACK_LEFT_CAN_DRIVE = 1;
 	private final int BACK_RIGHT_CAN_DRIVE = 3;
+	
+	private final int INPUT_PORT = 0;
 
 	// Values
 	private final int DRIVE_ENC_CODE_PER_REV = 2048;
@@ -43,8 +47,12 @@ public class Robot extends SampleRobot {
 	private LogitechGamingPad pad;
 	private LogitechGamingPad padSupport;
 	private SmartDashboard dash;
-	private UsbCamera camera;
 	private CameraServer server;
+	//private UsbCamera camera;
+	//private UsbCamera camera2;
+	private AxisCamera visionCamera; 
+	private LVMaxSonarEZUltrasonic sonicSensor;
+	private Timer timer; 
 
 	// Joystick commands
 	private double slowTrigger;
@@ -53,7 +61,15 @@ public class Robot extends SampleRobot {
 
 	//Network Table
 	private NetworkTable table;
-
+	
+	//Camera Stuff
+	private double[] defaultValue = new double[0];
+	private double[] centerY; 
+	private double[] centerX;
+	private double centerXCoor = 0;
+	private double cameraWidth = 160;
+	private double cameraLength = 120; 
+	
 
 	public Robot() {
 		talonDrive.initializeTalonDrive(FRONT_LEFT_CAN_DRIVE, BACK_LEFT_CAN_DRIVE, FRONT_RIGHT_CAN_DRIVE,
@@ -64,12 +80,25 @@ public class Robot extends SampleRobot {
 		pad = new LogitechGamingPad(0);
 		padSupport = new LogitechGamingPad(1);
 
-		server = CameraServer.getInstance();
-		camera = new UsbCamera("camera", 0);
-		camera.setResolution(320, 240);
-		server.startAutomaticCapture(camera);
+		//server = CameraServer.getInstance();
+		//camera = new UsbCamera("camera1", 1);
+		//camera2 = new UsbCamera("camera2", 0);
+		//visionCamera = new AxisCamera("visionCamera", "10.40.79.88");
+		
+		//camera.setResolution(160, 120);
+		//camera2.setResolution(160, 120);
+		//visionCamera.setResolution(480, 360);
+		
+		//server.startAutomaticCapture(camera);
+		//server.startAutomaticCapture(camera2);
+		//server.startAutomaticCapture(visionCamera);
+		
+		sonicSensor = new LVMaxSonarEZUltrasonic(INPUT_PORT);
+		timer = new Timer();
 		
 		table = NetworkTable.getTable("GRIP/myContoursReport");
+		centerY = table.getNumberArray("centerY", defaultValue);
+		centerX  = table.getNumberArray("centerX", defaultValue);
 
 	}
 
@@ -86,14 +115,143 @@ public class Robot extends SampleRobot {
 	}*/
 
 	public void autonomous() {
-		double[] defaultValue = new double[0];
-		double[] centerY = table.getNumberArray("centerY", defaultValue);
-		double[] centerX = table.getNumberArray("centerX", defaultValue);
-		double centerXCoor = 0;
-		double cameraWidth = 160;
-		double cameraLength = 120; 
+		int caseNumber = 0;
+		int caseNumber2 = 1;
+		//if vision target is centered, but ultrasonic sensor reads too high a value --> case 1
+			//case 1: move forwards until ultrasonic sensor reads the correct value
+			//caseNumber = 1;
+		
+		//if vision target is to the left (center x coordinate is to the left of the middle) --> case 2
+			//case 2: drive back; power right side motor; drive forward; power left side motor;
+			//when is centered, drive forward slowly and decelerate as you move forward
+			//place gear on peg
+			//caseNumber = 2;
+		
+		//if vision target is to the right (center x coordinate is to the right of the middle) --> case 3
+			//case 2: drive back; power left side motor; drive forward; power right side motor;
+			//when is centered, drive forward slowly and decelerate as you move forward
+			//place gear on peg
+			//caseNumber = 3;
+		/*
+		centerY = table.getNumberArray("centerY", defaultValue);
+		centerX = table.getNumberArray("centerX", defaultValue);
+		boolean centered = false; 
+		if (centerY.length == 2 && centerX.length == 2)
+		{
+			centerXCoor = (centerX[0] + centerX[1])/2;
+			if (centerXCoor >= 70 && centerXCoor <= 90)
+			{
+				centered = true;
+				caseNumber = 1;
+			}
+			
+		}
+		*/
+		//SmartDashboard.putBoolean("Centered: ", centered);
+		
+		timer.start();
 		
 		while (isAutonomous() && isEnabled()) {
+			centerY = table.getNumberArray("centerY", defaultValue);
+			centerX = table.getNumberArray("centerX", defaultValue);
+			/*
+			switch (caseNumber)
+			{
+				case 1:
+					if (sonicSensor.getDistance() > 8 && sonicSensor.getDistance() < 10 )
+						talonDrive.tankDrive(0, 0);
+					else if (sonicSensor.getDistance() < 8)
+						talonDrive.tankDrive(0.12, 0.12);
+					else 
+						talonDrive.tankDrive(-0.12, -0.12);
+					break;
+				
+				case 2:
+					
+					break;
+				
+				case 3: 
+					break;
+			}
+			*/
+			
+			switch (caseNumber2)
+			{
+				case 1:
+					if (timer.get() < 1)
+						talonDrive.tankDrive(-0.2, -0.2);
+					else 
+						caseNumber2 = 2;
+					break;
+				case 2:
+					if (timer.get() < 5)
+						talonDrive.tankDrive(0, 0);
+					else 
+						caseNumber2 = 3;
+					break;
+				case 3: //not centered 
+					talonDrive.tankDrive(0.7, -0.7);
+					if (centerY.length == 2 && centerX.length == 2)
+						caseNumber2 = 4; 
+					break;
+				case 4: //centered but not close enough to target 
+					centerXCoor = (centerX[0] + centerX[1])/2;
+					if (centerXCoor >= 300 && centerXCoor <= 340)
+					{
+						talonDrive.tankDrive(0, 0);
+						caseNumber2 = 5; 
+					}
+					break; 
+				case 5: //centered and close to target 
+					if (sonicSensor.getDistance() > 8 && sonicSensor.getDistance() < 10)
+						talonDrive.tankDrive(0, 0);
+					else
+						talonDrive.tankDrive(-0.2, -0.2);
+					break;
+			}
+			SmartDashboard.putNumber("Ultrasonic reading: ", sonicSensor.getDistance());
+			SmartDashboard.putNumber("Ultrasonic raw reading; ", sonicSensor.getVoltage());
+			
+		}	
+	}
+
+	public void operatorControl() {
+		boolean stop = false;
+		while (isOperatorControl() && isEnabled()) {
+			slowTrigger = pad.getLeftTriggerValue();
+
+			eStop1Pressed = pad.getBackButton() || padSupport.getBackButton();
+			eStop2Pressed = pad.getStartButton() || padSupport.getStartButton();
+
+			if (eStop1Pressed && eStop2Pressed)
+				stop = true;
+
+			if (!stop) 
+				talonDrive.tankDrive(pad.getLeftAnalogY()  * -scaleTrigger(slowTrigger),
+						pad.getRightAnalogY() * -scaleTrigger(slowTrigger));
+			
+			SmartDashboard.putNumber("Ultrasonic reading: ", sonicSensor.getDistance());
+			SmartDashboard.putNumber("Ultrasonic raw reading; ", sonicSensor.getVoltage());
+		}
+	}
+
+	private double scaleTrigger(double trigger) {
+		return Math.min(1.0, 1.0 - 0.9 * trigger);
+	}
+
+	public double predictDistance (double pixels)
+	{
+		// y = -1.542693 + (2487.625 - -1.542693)/(1 + (x/1.294396)^0.9814597)
+		double num = 2487.625 + 1.542693;
+		double den = 1 + Math.pow((pixels/1.294396), 0.9814597);
+		return (num/den -1.542693);
+	}
+
+	public void test() {
+	
+		
+		while (isTest() && isEnabled()){
+			dash.putString("mode: ", "test");
 			centerY = table.getNumberArray("centerY", defaultValue);
 			centerX = table.getNumberArray("centerX", defaultValue);
 			dash.putString("centerY: ", Arrays.toString(centerY));
@@ -127,41 +285,6 @@ public class Robot extends SampleRobot {
 				else if (centerX[0] >= 80)
 					talonDrive.tankDrive(-0.15, -0.15);
 			}		
-		}	
-	}
-
-	public void operatorControl() {
-		boolean stop = false;
-		while (isOperatorControl() && isEnabled()) {
-			slowTrigger = pad.getLeftTriggerValue();
-
-			eStop1Pressed = pad.getBackButton() || padSupport.getBackButton();
-			eStop2Pressed = pad.getStartButton() || padSupport.getStartButton();
-
-			if (eStop1Pressed && eStop2Pressed)
-				stop = true;
-
-			if (!stop) 
-				talonDrive.tankDrive(pad.getLeftAnalogY() * -scaleTrigger(slowTrigger),
-						pad.getRightAnalogY() * -scaleTrigger(slowTrigger));
-		}
-	}
-
-	private double scaleTrigger(double trigger) {
-		return Math.min(1.0, 1.0 - 0.9 * trigger);
-	}
-
-	public double predictDistance (double pixels)
-	{
-		// y = -1.542693 + (2487.625 - -1.542693)/(1 + (x/1.294396)^0.9814597)
-		double num = 2487.625 + 1.542693;
-		double den = 1 + Math.pow((pixels/1.294396), 0.9814597);
-		return (num/den -1.542693);
-	}
-
-	public void test() {
-		while (isTest() && isEnabled()){
-			dash.putString("mode: ", "test");
 		}
 	}
 }

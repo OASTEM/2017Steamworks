@@ -221,11 +221,11 @@ public class TalonDriveSystem {// (:
 		backLeftDrive.set(left);
 		backRightDrive.set(-right);
 
-		SmartDashboard.putNumber("Back Left Position", backLeftDrive.getPosition());
-		SmartDashboard.putNumber("Back Right Position", backRightDrive.getPosition());
+		//SmartDashboard.putNumber("Back Left Position", backLeftDrive.getPosition());
+		//SmartDashboard.putNumber("Back Right Position", backRightDrive.getPosition());
 
-		SmartDashboard.putNumber("Back Left Speed", backLeftDrive.getSpeed());
-		SmartDashboard.putNumber("Back Right Speed", backRightDrive.getSpeed());
+		//SmartDashboard.putNumber("Back Left Speed", backLeftDrive.getSpeed());
+		//SmartDashboard.putNumber("Back Right Speed", backRightDrive.getSpeed());
 
 		
 		slave();
