@@ -219,7 +219,7 @@ public class TalonDriveSystem {// (:
 		changeTalonToPercent();
 		
 		backLeftDrive.set(left);
-		backRightDrive.set(-right);
+		backRightDrive.set(-right); //-right because of motor orientation
 
 		//SmartDashboard.putNumber("Back Left Position", backLeftDrive.getPosition());
 		//SmartDashboard.putNumber("Back Right Position", backRightDrive.getPosition());
@@ -230,6 +230,14 @@ public class TalonDriveSystem {// (:
 		
 		slave();
 	}
+	
+	public void reverseTankDrive(double left, double right) {
+		changeTalonToPercent();
+		
+		backLeftDrive.set(-left);
+		backRightDrive.set(right);
+	}
+	
 
 	public boolean driveDistance(double distanceInInches, boolean isFoward) {
 		changeTalonToSpeed();

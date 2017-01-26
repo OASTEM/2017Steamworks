@@ -21,6 +21,8 @@ public class Robot extends SampleRobot {
 	private final int BACK_LEFT_CAN_DRIVE = 1;
 	private final int BACK_RIGHT_CAN_DRIVE = 3;
 	private final int SONIC_SENSOR_INPUT_PORT = 0;
+	private final int CAMERA_RESOLUTION_WIDTH = 480;
+	private final int CAMERA_RESOLUTION_HEIGHT = 360; 
 
 	// Values
 	private final int DRIVE_ENC_CODE_PER_REV = 2048;
@@ -53,6 +55,24 @@ public class Robot extends SampleRobot {
 	private double centerXCoor = 0;
 	private double cameraWidth = 160;
 	private double cameraLength = 120; 
+	
+	//Autonomous Cases
+	private final int DRIVE_STRAIGHT = 1;
+	private final int MOMENTUM_STOP= 2;
+	private final int TURN = 3; 
+	private final int STOP_WHEN_CENTERED = 4; 
+	private final int SELF_CORRECT_DRIVE = 5; 
+	private final int STOP_WHEN_CLOSE_ENOUGH = 6; 
+	
+	//Autonomous Values
+	private final int HALF_RES_LEFT = CAMERA_RESOLUTION_WIDTH/2 - 20;
+	private final int HALF_RES_RIGHT = CAMERA_RESOLUTION_WIDTH/2 + 20;
+	private final double SWERVE_DRIVE_SPEED = 0.3;
+	private final double STRAIGHT_DRIVE_SPEED = 0.2;
+	private final double TURN_SPEED = 0.7;
+	private final double STOP_SPEED = 0;
+	private final int MIN_DISTANCE = 14;
+	private final int MAX_DISTANCE = 16; 
 	
 
 	public Robot() {
@@ -87,118 +107,69 @@ public class Robot extends SampleRobot {
 	}
 
 	public void autonomous() {
-		int caseNumber = 0;
-		int caseNumber2 = 5;
-		//if vision target is centered, but ultrasonic sensor reads too high a value --> case 1
-			//case 1: move forwards until ultrasonic sensor reads the correct value
-			//caseNumber = 1;
-		
-		//if vision target is to the left (center x coordinate is to the left of the middle) --> case 2
-			//case 2: drive back; power right side motor; drive forward; power left side motor;
-			//when is centered, drive forward slowly and decelerate as you move forward
-			//place gear on peg
-			//caseNumber = 2;
-		
-		//if vision target is to the right (center x coordinate is to the right of the middle) --> case 3
-			//case 2: drive back; power left side motor; drive forward; power right side motor;
-			//when is centered, drive forward slowly and decelerate as you move forward
-			//place gear on peg
-			//caseNumber = 3;
-		/*
-		centerY = table.getNumberArray("centerY", defaultValue);
-		centerX = table.getNumberArray("centerX", defaultValue);
-		boolean centered = false; 
-		if (centerY.length == 2 && centerX.length == 2)
-		{
-			centerXCoor = (centerX[0] + centerX[1])/2;
-			if (centerXCoor >= 70 && centerXCoor <= 90)
-			{
-				centered = true;
-				caseNumber = 1;
-			}
-			
-		}
-		*/
-		//SmartDashboard.putBoolean("Centered: ", centered);
-		
 		timer.start();
+		int autonomousCase = DRIVE_STRAIGHT;
 		
 		while (isAutonomous() && isEnabled()) {
 			centerY = table.getNumberArray("centerY", defaultValue);
 			centerX = table.getNumberArray("centerX", defaultValue);
-			/*
-			switch (caseNumber)
-			{
-				case 1:
-					if (sonicSensor.getDistance() > 8 && sonicSensor.getDistance() < 10 )
-						talonDrive.tankDrive(0, 0);
-					else if (sonicSensor.getDistance() < 8)
-						talonDrive.tankDrive(0.12, 0.12);
-					else 
-						talonDrive.tankDrive(-0.12, -0.12);
-					break;
-				
-				case 2:
-					
-					break;
-				
-				case 3: 
-					break;
-			}
-			*/
 			
-			switch (caseNumber2)
+			switch (autonomousCase)
 			{
-				case 1:
+				case DRIVE_STRAIGHT:
 					if (timer.get() < 1)
-						talonDrive.tankDrive(-0.2, -0.2);
+						talonDrive.reverseTankDrive(STRAIGHT_DRIVE_SPEED, STRAIGHT_DRIVE_SPEED);
 					else 
-						caseNumber2 = 2;
+						autonomousCase = MOMENTUM_STOP;
 					break;
-				case 2:
+					
+				case MOMENTUM_STOP:
 					if (timer.get() < 4)
-						talonDrive.tankDrive(0, 0);
+						talonDrive.tankDrive(STOP_SPEED, STOP_SPEED);
 					else 
-						caseNumber2 = 3;
+						autonomousCase = TURN;
 					break;
-				case 3: //not centered 
-					talonDrive.tankDrive(0.7, -0.7);
-					if (/*talonDrive.getAngle() < 65 && talonDrive.getAngle() > 55 && */centerY.length == 2 && centerX.length == 2)
-						caseNumber2 = 4; 
+					
+				case TURN: 
+					talonDrive.tankDrive(TURN_SPEED, -TURN_SPEED);
+					if (talonDrive.getAngle() < 65 && talonDrive.getAngle() > 55 && centerY.length == 2 && centerX.length == 2)
+						autonomousCase = STOP_WHEN_CENTERED; 
 					break;
-				case 4: //centered but not close enough to target 
+					
+				case STOP_WHEN_CENTERED: 
 					centerXCoor = (centerX[0] + centerX[1])/2;
-					if (centerXCoor >= 220 && centerXCoor <= 260)
+					if (centerXCoor >= HALF_RES_LEFT && centerXCoor <= HALF_RES_RIGHT)
 					{
-						talonDrive.tankDrive(0, 0);
-						caseNumber2 = 5; 
+						talonDrive.tankDrive(STOP_SPEED, STOP_SPEED);
+						autonomousCase = SELF_CORRECT_DRIVE; 
 					}
 					break; 
-				case 5: //centered and close to target 
+					
+				case SELF_CORRECT_DRIVE: 
 					if (centerY.length == 2 && centerX.length == 2)
 						centerXCoor = (centerX[0] + centerX[1])/2;
-					if (!(sonicSensor.getDistance() > 14 && sonicSensor.getDistance() < 16))
+					if (!(sonicSensor.getDistance() > MIN_DISTANCE && sonicSensor.getDistance() < MAX_DISTANCE))
 					{
-						if (centerXCoor >= 220 && centerXCoor <= 260)
-							talonDrive.tankDrive(-0.2, -0.2);
-						else if (centerXCoor <= 220)
-							talonDrive.tankDrive(-0.3, -0.0);
-						else if (centerXCoor >= 260)
-							talonDrive.tankDrive(-0.0, -0.3);	
+						if (centerXCoor >= HALF_RES_LEFT && centerXCoor <= HALF_RES_RIGHT)
+							talonDrive.reverseTankDrive(STRAIGHT_DRIVE_SPEED, STRAIGHT_DRIVE_SPEED);
+						else if (centerXCoor <= HALF_RES_LEFT)
+							talonDrive.reverseTankDrive(SWERVE_DRIVE_SPEED, STOP_SPEED);
+						else if (centerXCoor >= HALF_RES_RIGHT)
+							talonDrive.reverseTankDrive(STOP_SPEED, SWERVE_DRIVE_SPEED);	
 						else if (centerY.length < 2 && centerX.length < 2)
-							talonDrive.tankDrive(-0.2, -0.2);
+							talonDrive.reverseTankDrive(STRAIGHT_DRIVE_SPEED, STRAIGHT_DRIVE_SPEED);
 					}
 					else
-							caseNumber2 = 6;
+							autonomousCase = STOP_WHEN_CLOSE_ENOUGH;
 					break;
-				case 6:
-					if (sonicSensor.getDistance() > 14 && sonicSensor.getDistance() < 16)
-						talonDrive.tankDrive(0, 0);
+					
+				case STOP_WHEN_CLOSE_ENOUGH:
+					if (sonicSensor.getDistance() > MIN_DISTANCE && sonicSensor.getDistance() < MAX_DISTANCE)
+						talonDrive.tankDrive(STOP_SPEED, STOP_SPEED);
 					break;
 			}
 			SmartDashboard.putNumber("Ultrasonic reading: ", sonicSensor.getDistance());
-			SmartDashboard.putNumber("Ultrasonic raw reading; ", sonicSensor.getVoltage());
-			
+			SmartDashboard.putNumber("Ultrasonic raw reading; ", sonicSensor.getVoltage());	
 		}	
 	}
 
