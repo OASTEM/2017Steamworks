@@ -56,6 +56,8 @@ public class TalonDriveSystem {// (:
 		backRightDrive = new CANTalon(rightRear);
 		backLeftDrive = new CANTalon(leftRear);
 		
+		
+		
 		frontRightDrive.enableBrakeMode(true);
 		frontLeftDrive.enableBrakeMode(true);
 		backRightDrive.enableBrakeMode(true);
