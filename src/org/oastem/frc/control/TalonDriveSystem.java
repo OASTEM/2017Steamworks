@@ -92,10 +92,12 @@ public class TalonDriveSystem {// (:
 	}
 
 	private void initCan() {
+		/*
 		if (frontRightDrive != null)
 			frontRightDrive.changeControlMode(TalonControlMode.Follower);
-		if (frontLeftDrive != null)
-			frontLeftDrive.changeControlMode(TalonControlMode.Follower);
+		if (backLeftDrive != null) 
+			backLeftDrive.changeControlMode(TalonControlMode.Follower);
+		*/
 		
 		TalonControlMode mode = TalonControlMode.Speed;
 		FeedbackDevice encoder = FeedbackDevice.QuadEncoder;
@@ -109,14 +111,14 @@ public class TalonDriveSystem {// (:
 		backRightDrive.reverseOutput(true);
 		backRightDrive.reverseSensor(true);
 		
-		backLeftDrive.changeControlMode(mode);
-		backLeftDrive.setFeedbackDevice(encoder);
-		backLeftDrive.configEncoderCodesPerRev(encoderPulsePerRev);
-		backLeftDrive.enable();
-		backLeftDrive.setPID(.6, 0, 0);
-		backLeftDrive.setF(.534);
-		backLeftDrive.reverseOutput(true);
-		backLeftDrive.reverseSensor(true);
+		frontLeftDrive.changeControlMode(mode);
+		frontLeftDrive.setFeedbackDevice(encoder);
+		frontLeftDrive.configEncoderCodesPerRev(encoderPulsePerRev);
+		frontLeftDrive.enable();
+		frontLeftDrive.setPID(.6, 0, 0);
+		frontLeftDrive.setF(.534);
+		frontLeftDrive.reverseOutput(true);
+		frontLeftDrive.reverseSensor(true);
 		
 		slave();
 	}
@@ -309,8 +311,8 @@ public class TalonDriveSystem {// (:
 	}
 
 	private void slave() {
-		if (frontLeftDrive != null) {
-			frontLeftDrive.set(backLeftDrive.getDeviceID());
+		if (backLeftDrive != null) {
+			backLeftDrive.set(frontLeftDrive.getDeviceID());
 		}
 		if (frontRightDrive != null) {
 			frontRightDrive.set(backRightDrive.getDeviceID());

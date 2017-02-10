@@ -38,7 +38,6 @@ public class Robot extends SampleRobot {
 	//Sensors
 	private LVMaxSonarEZUltrasonic sonicSensor;
 	
-	
 	//Joystick 
 	private LogitechGamingPad pad;
 
@@ -63,23 +62,23 @@ public class Robot extends SampleRobot {
 	private Timer timer; 
 	
 	public Robot() {
-		//initialize drive system
+		//initialize Drive System
 		talonDrive.initializeTalonDrive(C.Port.FRONT_LEFT_CAN_DRIVE, C.Port.BACK_LEFT_CAN_DRIVE,
 				C.Port.FRONT_RIGHT_CAN_DRIVE, C.Port.BACK_RIGHT_CAN_DRIVE, C.Drive.DRIVE_ENC_CODE_PER_REV,
 				C.Drive.DRIVE_WHEEL_DIAM);
 		talonDrive.calibrateGyro();
 		resetEncoders();
 		
-		//initialize joystick 
+		//initialize Joystick 
 		pad = new LogitechGamingPad(0);
 
-		//initialize camera objects 
+		//initialize Camera Objects 
 		server = CameraServer.getInstance();
 		camera = new UsbCamera("camera", 0);
 		camera2 = new UsbCamera("camera2", 1);
 		visionCamera = new AxisCamera("visionCamera", "10.40.79.88");
 		
-		//set camera values
+		//set Camera Values
 		camera.setResolution(160, 120);
 		camera2.setResolution(160, 120);
 		visionCamera.setResolution(480, 360);
@@ -87,13 +86,13 @@ public class Robot extends SampleRobot {
 		server.startAutomaticCapture(camera2);
 		server.startAutomaticCapture(visionCamera);
 		
-		//initialize ultrasonic sensor
+		//initialize Ultrasonic Sensor
 		sonicSensor = new LVMaxSonarEZUltrasonic(C.Port.SONIC_SENSOR_INPUT_PORT);
 
-		//initalize timer
+		//initialize Timer
 		timer = new Timer();
 
-		//initialize Network Tables and get arrays from Contours Report
+		//initialize Network Tables and Get Arrays from Contours Report
 		table = NetworkTable.getTable("GRIP/myContoursReport");
 		centerY = table.getNumberArray("centerY", defaultValue);
 		centerX = table.getNumberArray("centerX", defaultValue);
@@ -102,7 +101,7 @@ public class Robot extends SampleRobot {
 		pdp = new PowerDistributionPanel();
 		pdp.clearStickyFaults();
 
-		//set joystick toggles
+		//set Joystick Toggles
 		reverseDirectionToggle = false;
 		conveyorToggle = false;
 	}
@@ -133,10 +132,7 @@ public class Robot extends SampleRobot {
 			case C.Auto.TURN:
 				talonDrive.tankDrive(-C.Speed.TURN_SPEED, C.Speed.TURN_SPEED);
 
-				if (
-					 * talonDrive.getAngle() < 65 && talonDrive.getAngle() > 55
-					 * &&
-					  centerY.length == 2 && centerX.length == 2) {
+				if (/* talonDrive.getAngle() < 65 && talonDrive.getAngle() > 55 && */ centerY.length == 2 && centerX.length == 2) {
 					autonomousCase = C.Auto.STOP_WHEN_CENTERED;
 				}
 				break;
