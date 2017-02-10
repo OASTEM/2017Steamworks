@@ -16,20 +16,33 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Robot extends SampleRobot {
-	// Objects
+	// Drive System
 	private TalonDriveSystem talonDrive = TalonDriveSystem.getInstance();
+	
+	//Motors
 	private Talon conveyorMotor;
 	private Talon winchMotor;
-	private LogitechGamingPad pad;
+	
+	//Camera Objects
 	private CameraServer server;
 	private UsbCamera camera;
 	private UsbCamera camera2;
 	private AxisCamera visionCamera;
+	
+	//Camera Values
+	private double[] defaultValue = new double[0];
+	private double[] centerY;
+	private double[] centerX;
+	private double centerXCoor = 0;
+	
+	//Sensors
 	private LVMaxSonarEZUltrasonic sonicSensor;
-	private Timer timer;
-	private PowerDistributionPanel pdp;
+	
+	
+	//Joystick 
+	private LogitechGamingPad pad;
 
-	// Joystick commands
+	//Joystick commands
 	private double slowTrigger;
 	private boolean eStop1Pressed;
 	private boolean reverseDirectionPressed;
@@ -42,49 +55,58 @@ public class Robot extends SampleRobot {
 	
 	// Network Table
 	private NetworkTable table;
-
-	// Camera Stuff
-	private double[] defaultValue = new double[0];
-	private double[] centerY;
-	private double[] centerX;
-	private double centerXCoor = 0;
+	
+	//PDP
+	private PowerDistributionPanel pdp;
+	
+	//Timer
+	private Timer timer; 
 	
 	public Robot() {
+		//initialize drive system
 		talonDrive.initializeTalonDrive(C.Port.FRONT_LEFT_CAN_DRIVE, C.Port.BACK_LEFT_CAN_DRIVE,
 				C.Port.FRONT_RIGHT_CAN_DRIVE, C.Port.BACK_RIGHT_CAN_DRIVE, C.Drive.DRIVE_ENC_CODE_PER_REV,
 				C.Drive.DRIVE_WHEEL_DIAM);
 		talonDrive.calibrateGyro();
-
+		resetEncoders();
+		
+		//initialize joystick 
 		pad = new LogitechGamingPad(0);
 
-		// Camera Objects
+		//initialize camera objects 
 		server = CameraServer.getInstance();
 		camera = new UsbCamera("camera", 0);
 		camera2 = new UsbCamera("camera2", 1);
 		visionCamera = new AxisCamera("visionCamera", "10.40.79.88");
+		
+		//set camera values
 		camera.setResolution(160, 120);
 		camera2.setResolution(160, 120);
 		visionCamera.setResolution(480, 360);
 		server.startAutomaticCapture(camera);
 		server.startAutomaticCapture(camera2);
 		server.startAutomaticCapture(visionCamera);
-
+		
+		//initialize ultrasonic sensor
 		sonicSensor = new LVMaxSonarEZUltrasonic(C.Port.SONIC_SENSOR_INPUT_PORT);
 
+		//initalize timer
 		timer = new Timer();
 
+		//initialize Network Tables and get arrays from Contours Report
 		table = NetworkTable.getTable("GRIP/myContoursReport");
 		centerY = table.getNumberArray("centerY", defaultValue);
 		centerX = table.getNumberArray("centerX", defaultValue);
-
+		
+		//initialize PDP
 		pdp = new PowerDistributionPanel();
 		pdp.clearStickyFaults();
 
+		//set joystick toggles
 		reverseDirectionToggle = false;
 		conveyorToggle = false;
-
 	}
-
+	
 	public void autonomous() {
 		timer.start();
 		int autonomousCase = C.Auto.SELF_CORRECT_DRIVE;
@@ -111,10 +133,10 @@ public class Robot extends SampleRobot {
 			case C.Auto.TURN:
 				talonDrive.tankDrive(-C.Speed.TURN_SPEED, C.Speed.TURN_SPEED);
 
-				if (/*
+				if (
 					 * talonDrive.getAngle() < 65 && talonDrive.getAngle() > 55
 					 * &&
-					 */ centerY.length == 2 && centerX.length == 2) {
+					  centerY.length == 2 && centerX.length == 2) {
 					autonomousCase = C.Auto.STOP_WHEN_CENTERED;
 				}
 				break;
@@ -154,27 +176,31 @@ public class Robot extends SampleRobot {
 			}
 			SmartDashboard.putNumber("Ultrasonic reading: ", sonicSensor.getDistance());
 			SmartDashboard.putNumber("Ultrasonic raw reading; ", sonicSensor.getVoltage());
-
 		}
 	}
 
 	public void operatorControl() {
 		boolean stop = false;
 		boolean reverseOrNah = false; 
-		boolean conveyorOnOrNah = false;
+		//boolean conveyorOnOrNah = false;
+		talonDrive.resetGyro();
+		resetEncoders();
 		
 		while (isOperatorControl() && isEnabled()) {
+			SmartDashboard.putDouble("Gyroscope value: ", talonDrive.getAngle());
+
 			slowTrigger = pad.getLeftTriggerValue();
 			//winch = pad.getRightTriggerValue();
 			eStop1Pressed = pad.getBackButton();
 			reverseDirectionPressed = pad.getAButton();
 			conveyorPressed = pad.getLeftBumper();
-			sprintLeft = pad.getRawButton(9);
-			sprintRight = pad.getRawButton(10);
+			//sprintLeft = pad.getRawButton(9);
+			//sprintRight = pad.getRawButton(10);
 			
 			if (eStop1Pressed)
 				stop = true;
 			
+			/*
 			if (reverseDirectionPressed && !reverseDirectionToggle)
 			{
 				reverseDirectionToggle = true;
@@ -190,16 +216,16 @@ public class Robot extends SampleRobot {
 			if (sprintLeft && sprintRight && !reverseOrNah && !stop)
 				talonDrive.reverseTankDrive(pad.getLeftAnalogY(),
 						pad.getRightAnalogY());
+			*/
 			
-			if (reverseOrNah && !stop)
-				talonDrive.tankDrive(pad.getLeftAnalogY() * 0.75,
-						pad.getRightAnalogY() * 0.75);
-			else if (!reverseOrNah && !stop)
-				talonDrive.reverseTankDrive(pad.getLeftAnalogY() * 0.75,
-						pad.getRightAnalogY() * 0.75);
+			if (/*reverseOrNah && */ !stop)
+				talonDrive.tankDrive(pad.getRightAnalogY(),
+						pad.getLeftAnalogY());
 			
-			
-			/*
+			/*else if (!reverseOrNah && !stop)
+				talonDrive.reverseTankDrive(pad.getLeftAnalogY(),
+						pad.getRightAnalogY());
+						
 			if (conveyorPressed && !conveyorToggle)
 			{
 				conveyorToggle = true;
@@ -215,13 +241,23 @@ public class Robot extends SampleRobot {
 			
 			winchMotor.set(winch);
 			*/
-
-
-	
-			
+			SmartDashboard.putDouble("Left Axis: ", pad.getLeftAnalogY());
+			SmartDashboard.putDouble("Right Axis: ", pad.getRightAnalogY());
+			SmartDashboard.putDouble("Encoder Left Back: ", talonDrive.getBackLeftDrive().getEncPosition());
+			SmartDashboard.putDouble("Encoder Right Back: ", talonDrive.getBackRightDrive().getEncPosition());
+			SmartDashboard.putDouble("Encoder Left Front: ", talonDrive.getFrontLeftDrive().getEncPosition());
+			SmartDashboard.putDouble("Encoder Right Front: ", talonDrive.getFrontRightDrive().getEncPosition());
 		}
 	}
 
+	public void resetEncoders()
+	{
+		talonDrive.getBackLeftDrive().setEncPosition(0);
+		talonDrive.getFrontLeftDrive().setEncPosition(0);
+		talonDrive.getFrontRightDrive().setEncPosition(0);
+		talonDrive.getBackRightDrive().setEncPosition(0);
+	} 
+	
 	private double scaleTrigger(double trigger) {
 		return Math.min(1.0, 1.0 - 0.9 * trigger);
 	}
@@ -234,10 +270,7 @@ public class Robot extends SampleRobot {
 	}
 
 	public void test() {
-		camera = new UsbCamera("camera2", 0);
-
 		while (isTest() && isEnabled()) {
-
 		}
 	}
 }

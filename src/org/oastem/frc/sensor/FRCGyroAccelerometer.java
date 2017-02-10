@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 
 public class FRCGyroAccelerometer {
-	private static final double DRIFT_PER_SECOND = .0161803398875;// 0.333/60; 
+	private static final double DRIFT_PER_SECOND = 0;//.0161803398875;// 0.333/60; 
 	private long lastUpdateTime = 0;
 	private double [] accelXAverage;
 	private double [] accelYAverage;

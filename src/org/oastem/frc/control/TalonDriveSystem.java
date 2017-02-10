@@ -17,8 +17,10 @@ public class TalonDriveSystem {// (:
 	private Accelerator accLeft;
 	private Accelerator accRight;
 	private FRCGyroAccelerometer gyro;
-	private int encoderCodePerRev;
+	
+	private int encoderPulsePerRev;
 	private double wheelCircum;
+	
 	private int tick;
 	private double startLeft;
 	private double startRight;
@@ -56,14 +58,12 @@ public class TalonDriveSystem {// (:
 		backRightDrive = new CANTalon(rightRear);
 		backLeftDrive = new CANTalon(leftRear);
 		
-		
-		
 		frontRightDrive.enableBrakeMode(true);
 		frontLeftDrive.enableBrakeMode(true);
 		backRightDrive.enableBrakeMode(true);
 		backLeftDrive.enableBrakeMode(true);
 		
-		encoderCodePerRev = pulsesPerRev;
+		encoderPulsePerRev = pulsesPerRev;
 		wheelCircum = wheelDiameter * Math.PI;
 		accLeft = new Accelerator();
 		accRight = new Accelerator();
@@ -82,14 +82,13 @@ public class TalonDriveSystem {// (:
 		backRightDrive.enableBrakeMode(true);
 		backLeftDrive.enableBrakeMode(true);
 		
-		encoderCodePerRev = pulsesPerRev;
+		encoderPulsePerRev = pulsesPerRev;
 		wheelCircum = wheelDiameter * Math.PI;
 		accLeft = new Accelerator();
 		accRight = new Accelerator();
 		gyro = new FRCGyroAccelerometer();
 		
 		initCan();
-		SmartDashboard.putString("Swag", "Dank Dreams");
 	}
 
 	private void initCan() {
@@ -97,12 +96,13 @@ public class TalonDriveSystem {// (:
 			frontRightDrive.changeControlMode(TalonControlMode.Follower);
 		if (frontLeftDrive != null)
 			frontLeftDrive.changeControlMode(TalonControlMode.Follower);
+		
 		TalonControlMode mode = TalonControlMode.Speed;
 		FeedbackDevice encoder = FeedbackDevice.QuadEncoder;
 		
 		backRightDrive.changeControlMode(mode);
 		backRightDrive.setFeedbackDevice(encoder);
-		backRightDrive.configEncoderCodesPerRev(encoderCodePerRev);
+		backRightDrive.configEncoderCodesPerRev(encoderPulsePerRev);
 		backRightDrive.enable();
 		backRightDrive.setPID(.6, 0, 0);
 		backRightDrive.setF(.534);
@@ -111,11 +111,14 @@ public class TalonDriveSystem {// (:
 		
 		backLeftDrive.changeControlMode(mode);
 		backLeftDrive.setFeedbackDevice(encoder);
-		backLeftDrive.configEncoderCodesPerRev(encoderCodePerRev);
+		backLeftDrive.configEncoderCodesPerRev(encoderPulsePerRev);
 		backLeftDrive.enable();
 		backLeftDrive.setPID(.6, 0, 0);
 		backLeftDrive.setF(.534);
-
+		backLeftDrive.reverseOutput(true);
+		backLeftDrive.reverseSensor(true);
+		
+		slave();
 	}
 
 	/**** GYRO STUFF ****/
@@ -203,7 +206,7 @@ public class TalonDriveSystem {// (:
 		SmartDashboard.putNumber("Back Right Speed", backRightDrive.get());
 		
 		slave();
-	}// c:
+	}
 
 	public void accelTankDrive(double left, double right) {
 		changeTalonToPercent();
@@ -222,20 +225,13 @@ public class TalonDriveSystem {// (:
 		
 		backLeftDrive.set(left);
 		backRightDrive.set(-right); //-right because of motor orientation
-
-		//SmartDashboard.putNumber("Back Left Position", backLeftDrive.getPosition());
-		//SmartDashboard.putNumber("Back Right Position", backRightDrive.getPosition());
-
-		//SmartDashboard.putNumber("Back Left Speed", backLeftDrive.getSpeed());
-		//SmartDashboard.putNumber("Back Right Speed", backRightDrive.getSpeed());
-
 		
 		slave();
 	}
 	
 	public void reverseTankDrive(double left, double right) {
 		changeTalonToPercent();
-		
+	
 		backLeftDrive.set(-left);
 		backRightDrive.set(right);
 	}

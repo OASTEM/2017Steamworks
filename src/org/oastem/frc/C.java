@@ -10,15 +10,15 @@ public class C {
 		public static final int STOP_WHEN_CLOSE_ENOUGH = 6; 
 	}
 	public class Port{
-		public static final int FRONT_LEFT_CAN_DRIVE = 0;
+		public static final int FRONT_LEFT_CAN_DRIVE = 3;
 		public static final int FRONT_RIGHT_CAN_DRIVE = 2;
-		public static final int BACK_LEFT_CAN_DRIVE = 1;
-		public static final int BACK_RIGHT_CAN_DRIVE = 3;
+		public static final int BACK_LEFT_CAN_DRIVE = 0;
+		public static final int BACK_RIGHT_CAN_DRIVE = 1;
 		public static final int SONIC_SENSOR_INPUT_PORT = 0;
 	}
 	public class Drive{
-		public static final int DRIVE_ENC_CODE_PER_REV = 2048; //change this?
-		public static final int DRIVE_WHEEL_DIAM = 8; //change this
+		public static final int DRIVE_ENC_CODE_PER_REV = 20; //change this?
+		public static final int DRIVE_WHEEL_DIAM = 6; //change this
 	}
 	public class Cam{
 		public static final int CAMERA_RESOLUTION_WIDTH = 480;
