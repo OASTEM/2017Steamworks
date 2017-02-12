@@ -78,7 +78,7 @@ public class TalonDriveSystem {// (:
 		backLeftDrive = new CANTalon(left);
 		
 		backRightDrive.enableBrakeMode(true);
-		backLeftDrive.enableBrakeMode(true);
+		frontLeftDrive.enableBrakeMode(true);
 		
 		encoderPulsePerRev = pulsesPerRev;
 		wheelCircum = wheelDiameter * Math.PI;
@@ -148,7 +148,7 @@ public class TalonDriveSystem {// (:
 
 	private void changeTalonToSpeed() {
 		TalonControlMode mode = TalonControlMode.Speed;
-		backLeftDrive.changeControlMode(mode);
+		frontLeftDrive.changeControlMode(mode);
 		backRightDrive.changeControlMode(mode);
 	}
 
@@ -198,10 +198,10 @@ public class TalonDriveSystem {// (:
 			rightRPM /= wheelCircum;
 		}
 		
-		backLeftDrive.set(leftRPM);
+		frontLeftDrive.set(leftRPM);
 		backRightDrive.set(rightRPM);
 		
-		SmartDashboard.putNumber("Back Left Speed", backLeftDrive.get());
+		SmartDashboard.putNumber("Front Left Speed", frontLeftDrive.get());
 		SmartDashboard.putNumber("Back Right Speed", backRightDrive.get());
 		
 		slave();
@@ -210,7 +210,7 @@ public class TalonDriveSystem {// (:
 	public void accelTankDrive(double left, double right) {
 		changeTalonToPercent();
 		
-		backLeftDrive.set(accLeft.decelerateValue(accLeft.getSpeed(), left));
+		frontLeftDrive.set(accLeft.decelerateValue(accLeft.getSpeed(), left));
 		backRightDrive.set(-accRight.decelerateValue(accRight.getSpeed(), right));
 		
 		SmartDashboard.putNumber("Acc Left Speed", accLeft.getSpeed());
@@ -245,7 +245,7 @@ public class TalonDriveSystem {// (:
 	public boolean driveDistance(double distanceInInches, boolean isFoward) {
 		changeTalonToSpeed();
 		
-		double leftDistance = backLeftDrive.getEncPosition() * wheelCircum;
+		double leftDistance = frontLeftDrive.getEncPosition() * wheelCircum;
 		double rightDistance = backRightDrive.getEncPosition() * wheelCircum;
 		double currAngle = gyro.getGyroAngle();
 		
@@ -263,11 +263,11 @@ public class TalonDriveSystem {// (:
 		if (isFoward) {
 			if (leftDistance < startLeft + distanceInInches) {
 				if (currAngle > startAngle + BUFFER_ANGLE)
-					backLeftDrive.set(DRIVE_POWER - COMPENSATION);
+					frontLeftDrive.set(DRIVE_POWER - COMPENSATION);
 				else
-					backLeftDrive.set(DRIVE_POWER);
+					frontLeftDrive.set(DRIVE_POWER);
 			} else {
-				backLeftDrive.set(0);
+				frontLeftDrive.set(0);
 			}
 
 			if (rightDistance < startRight + distanceInInches) {
@@ -286,11 +286,11 @@ public class TalonDriveSystem {// (:
 		} else {
 			if (leftDistance > startLeft - distanceInInches) {
 				if (currAngle < startAngle - BUFFER_ANGLE)
-					backLeftDrive.set(-DRIVE_POWER + COMPENSATION);
+					frontLeftDrive.set(-DRIVE_POWER + COMPENSATION);
 				else
-					backLeftDrive.set(-DRIVE_POWER);
+					frontLeftDrive.set(-DRIVE_POWER);
 			} else {
-				backLeftDrive.set(0);
+				frontLeftDrive.set(0);
 			}
 
 			if (rightDistance > startRight - distanceInInches) {
@@ -323,8 +323,8 @@ public class TalonDriveSystem {// (:
 	}
 
 	public void setPID(double p, double i, double d, double f) {
-		backLeftDrive.setPID(p, i, d);
-		backLeftDrive.setF(f);
+		frontLeftDrive.setPID(p, i, d);
+		frontLeftDrive.setF(f);
 		backRightDrive.setPID(p, i, d);
 		backRightDrive.setF(f);
 	}
