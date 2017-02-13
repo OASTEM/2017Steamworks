@@ -30,7 +30,7 @@ public class C {
 		public static final double SWERVE_DRIVE_SPEED = 0.3;
 		public static final double STRAIGHT_DRIVE_SPEED = 0.3;
 		public static final double SLOWER_DRIVE_SPEED = 0.2;
-		public static final double GYRO_SLOWER_SPEED = 0.25;
+		public static final double GYRO_SLOWER_SPEED = 0.26;
 		public static final double TURN_SPEED = 0.8;
 		public static final double STOP_SPEED = 0;
 		public static final double GYRO_ANGLE_LIMIT = 1;
