@@ -57,7 +57,7 @@ public class TalonDriveSystem {// (:
 	public void initializeTalonDrive(int leftFront, int leftRear, int rightFront, int rightRear, int pulsesPerRev,
 			int wheelDiameter) {
 		
-		double RATE = 24;
+		double RATE = 12;
 		
 		frontRightDrive = new CANTalon(rightFront);
 		frontLeftDrive = new CANTalon(leftFront);
@@ -70,13 +70,16 @@ public class TalonDriveSystem {// (:
 		accRight = new Accelerator();
 		gyro = new FRCGyroAccelerometer();
 		
-		frontRightDrive.setVoltageRampRate(RATE);
-		frontLeftDrive.setVoltageRampRate(RATE);
-		backRightDrive.setVoltageRampRate(RATE);
-		backLeftDrive.setVoltageRampRate(RATE);
 		
-		backRightDrive.setF(2.5);
-		backLeftDrive.setF(2.4);
+		//backRightDrive.setVoltageRampRate(RATE);
+		//backLeftDrive.setVoltageRampRate(RATE);
+		
+		//backRightDrive.setVoltageCompensationRampRate(RATE);
+		//backLeftDrive.setVoltageCompensationRampRate(RATE);
+		
+		backRightDrive.setF(1.911); //2.5
+		backLeftDrive.setF(1.866);  //2.4
+		
 		
 		initCan();
 	}
