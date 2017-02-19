@@ -1,26 +1,19 @@
 package org.oastem.frc.strong;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.sql.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import org.oastem.frc.C;
 import org.oastem.frc.LogitechGamingPad;
 import org.oastem.frc.control.TalonDriveSystem;
+import org.oastem.frc.motion.LeftCase2;
 import org.oastem.frc.motion.MotionProfileExample;
-import org.oastem.frc.motion.StraightCase1;
+import org.oastem.frc.motion.RightCase2;
 import org.oastem.frc.sensor.LVMaxSonarEZUltrasonic;
 
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.cscore.AxisCamera;
-import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -153,7 +146,7 @@ public class Robot extends IterativeRobot {
 		reverseOrNah = false;
 		conveyorOrNah = false;
 		upDPadToggle = false;
-		downDPadToggle = false;
+		downDPadToggle = false; 
 		//conveyorOrNah = false;
 		
 		//Autonomous Chooser
@@ -191,19 +184,18 @@ public class Robot extends IterativeRobot {
 		resetEncoders();
 		reset = true;
 		
-		talonDrive.getBackLeftDrive().changeControlMode(TalonControlMode.MotionMagic);
-		talonDrive.getBackRightDrive().changeControlMode(TalonControlMode.MotionMagic);
-		talonDrive.getBackLeftDrive().setProfile(0);
-		talonDrive.getBackRightDrive().setProfile(0);
+		//talonDrive.getBackLeftDrive().changeControlMode(TalonControlMode.MotionMagic);
+		//talonDrive.getBackRightDrive().changeControlMode(TalonControlMode.MotionMagic);
 		
-		/*
+		//talonDrive.getBackLeftDrive().setProfile(0);
+		//talonDrive.getBackRightDrive().setProfile(0);
 		
 		backLeft.changeControlMode(TalonControlMode.MotionProfile);
 		backRight.changeControlMode(TalonControlMode.MotionProfile);
 		
 		//if (autoSelected.equals(case1Auto)){
-			leftProfile = new MotionProfileExample (backLeft, StraightCase1.getUpdatedPoints());
-			rightProfile = new MotionProfileExample (backRight, StraightCase1.Points);
+			leftProfile = new MotionProfileExample (backLeft, LeftCase2.getUpdatedPoints()); //StraightCase1.getUpdatedPoints()
+			rightProfile = new MotionProfileExample (backRight, RightCase2.Points); //StraightCase1
 		//}
 			/*
 		else if (autoSelected.equals(case2Auto)){
@@ -214,34 +206,32 @@ public class Robot extends IterativeRobot {
 			leftProfile = new MotionProfileExample (backLeft, LeftCase3.Points);
 			rightProfile = new MotionProfileExample (backRight, RightCase3.Points);
 		}
-			leftProfile.startMotionProfile();
+		*/
+
 			rightProfile.startMotionProfile();
-		 */
+			leftProfile.startMotionProfile();
+
 			
 	}
 
 	public void autonomousPeriodic() {
-		double distance = 7 * 10.71; //in ft multiplied by gear ratio
-		double circumference = 2*Math.PI*6;
+		//double distance = 7 * 10.71; //in ft multiplied by gear ratio
+		//double circumference = 0.5*Math.PI;
 		
-		talonDrive.getBackLeftDrive().set(distance/circumference);
-		talonDrive.getBackRightDrive().set(distance/circumference);
+		//talonDrive.getBackLeftDrive().set(distance/circumference);
+		//talonDrive.getBackRightDrive().set(distance/circumference);
 		printEncoderValues();
-		/*
-		leftProfile.control();
+		
 		rightProfile.control();
+		leftProfile.control();
 		
-		CANTalon.SetValueMotionProfile setOutputLeft = leftProfile.getSetValue();
 		CANTalon.SetValueMotionProfile setOutputRight = rightProfile.getSetValue();
+		CANTalon.SetValueMotionProfile setOutputLeft = leftProfile.getSetValue();
 		
-		backLeft.set(setOutputLeft.value);
 		backRight.set(setOutputRight.value);
+		backLeft.set(setOutputLeft.value);
 		
 		
-		System.out.println(System.currentTimeMillis() + " BL: " + talonDrive.getBackLeftDrive().getOutputVoltage());
-		System.out.println(System.currentTimeMillis() + " BR: " + talonDrive.getBackRightDrive().getOutputVoltage());
-		System.out.println(System.currentTimeMillis() + " FL: " + talonDrive.getFrontLeftDrive().getOutputVoltage());
-		System.out.println(System.currentTimeMillis() + " BL: " + talonDrive.getFrontRightDrive().getOutputVoltage());
 		
 		/**SmartDashboard.putNumber(System.currentTimeMillis() + " BL:",talonDrive.getBackLeftDrive().getOutputCurrent());
 		SmartDashboard.putNumber(System.currentTimeMillis() + " BR:",talonDrive.getBackRightDrive().getOutputCurrent());
@@ -353,6 +343,7 @@ public class Robot extends IterativeRobot {
 		if (eStop1Pressed)
 			stop = true;
 		
+		//REVERSE TOGGLE
 		if (reverseDirectionPressed && !reverseDirectionToggle)
 		{
 			reverseDirectionToggle = true;
@@ -360,16 +351,14 @@ public class Robot extends IterativeRobot {
 		}
 		if (!reverseDirectionPressed)
 			reverseDirectionToggle = false;
-
+		
 		if (reverseOrNah && !stop)
 			talonDrive.tankDrive(0.5 * pad.getRightAnalogY() * (1 + pad.getRightTriggerValue()) , 0.5 * pad.getLeftAnalogY() * (1 + pad.getLeftTriggerValue()));
 		
 		else if (!reverseOrNah && !stop)
 			talonDrive.reverseTankDrive(0.5 * pad.getRightAnalogY() * (1 + pad.getRightTriggerValue()) , 0.5 * pad.getLeftAnalogY() * (1+ pad.getLeftTriggerValue()));
-		
-		winchMotor.set(prefs.getDouble("Winch Motor Speed", 0));
-		
-		
+
+		//CONVEYOR TOGGLE
 		if (conveyorPressed && !conveyorToggle)
 		{
 			conveyorToggle = true;
@@ -379,9 +368,17 @@ public class Robot extends IterativeRobot {
 			conveyorToggle = false; 
 		
 		if (conveyorOrNah)
-			conveyorMotor.set(1);
-		else if (!conveyorToggle)
+			conveyorMotor.set(-1);
+		else if (!conveyorOrNah)
 			conveyorMotor.set(0);
+		
+		//WINCH CONTINUOUS 
+		if (pad.getRightBumper())
+			winchMotor.set(-1);
+		else if (pad.getLeftBumper())
+			winchMotor.set(1);
+		else 
+			winchMotor.set(0);
 		
 		//TEST
 		if (pad.checkDPad(0) && !upDPadToggle)
@@ -420,25 +417,11 @@ public class Robot extends IterativeRobot {
 				talonDrive.reverseTankDrive(C.Speed.STRAIGHT_DRIVE_SPEED, C.Speed.STRAIGHT_DRIVE_SPEED);
 		}
 		
-		if (pad.getRightBumper())
-			winchMotor.set(1);
-		else if (pad.getLeftBumper())
-			winchMotor.set(-1);
-		else 
-			winchMotor.set(0);
 		
 		SmartDashboard.putNumber("Left Speed: ", talonDrive.getBackLeftDrive().getSpeed());
 		SmartDashboard.putNumber("Right Speed: ", talonDrive.getBackRightDrive().getSpeed());
 		printEncoderValues();
 		
-		if (timer.get() > 5 && timer.get() < 5.1)
-		{
-			if (reset)
-			{
-				resetEncoders();
-				reset = false;
-			}
-		}
 	}
 
 	public void resetEncoders()

@@ -77,9 +77,14 @@ public class TalonDriveSystem {// (:
 		//backRightDrive.setVoltageCompensationRampRate(RATE);
 		//backLeftDrive.setVoltageCompensationRampRate(RATE);
 		
-		backRightDrive.setF(1.911); //2.5
-		backLeftDrive.setF(1.866);  //2.4
-		
+		backRightDrive.setF(1.900); //1.911
+		backLeftDrive.setF(1.88);  //1.866
+		backRightDrive.setP(0.000);
+		backLeftDrive.setP(0.000);
+		backRightDrive.setI(0);
+		backLeftDrive.setI(0);
+		backRightDrive.setD(0);
+		backLeftDrive.setD(0);
 		
 		initCan();
 	}
@@ -125,6 +130,12 @@ public class TalonDriveSystem {// (:
 		backLeftDrive.enable();
 		//backLeftDrive.setInverted(true);
 		backLeftDrive.reverseOutput(true);
+		
+		backLeftDrive.configNominalOutputVoltage(+0.0f, -0.0f);
+		backLeftDrive.configPeakOutputVoltage(+12.0f, -12.0f);
+		
+		backRightDrive.configNominalOutputVoltage(+0.0f, -0.0f);
+		backRightDrive.configPeakOutputVoltage(+12.0f, -12.0f);
 		
 		slave();
 	}
