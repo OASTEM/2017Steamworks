@@ -77,7 +77,7 @@ public class TalonDriveSystem {// (:
 		//backRightDrive.setVoltageCompensationRampRate(RATE);
 		//backLeftDrive.setVoltageCompensationRampRate(RATE);
 		
-		backRightDrive.setF(1.900); //1.911
+		backRightDrive.setF(1.911); //1.911
 		backLeftDrive.setF(1.88);  //1.866
 		backRightDrive.setP(0.000);
 		backLeftDrive.setP(0.000);

@@ -1,4 +1,4 @@
-package org.oastem.frc.strong;
+package org.oastem.frc.steam;
 
 import java.io.PrintWriter;
 
@@ -8,12 +8,14 @@ import org.oastem.frc.control.TalonDriveSystem;
 import org.oastem.frc.motion.LeftCase2;
 import org.oastem.frc.motion.MotionProfileExample;
 import org.oastem.frc.motion.RightCase2;
+import org.oastem.frc.motion.StraightCase1;
 import org.oastem.frc.sensor.LVMaxSonarEZUltrasonic;
 
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.cscore.AxisCamera;
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
@@ -47,6 +50,7 @@ public class Robot extends IterativeRobot {
 	//Camera Objects
 	private CameraServer server;
 	private AxisCamera visionCamera;
+	private UsbCamera usbCamera;
 	
 	//Camera Values
 	private double[] defaultValue = new double[0];
@@ -68,11 +72,14 @@ public class Robot extends IterativeRobot {
 	private boolean conveyorToggle;
 	private boolean upDPadToggle;
 	private boolean downDPadToggle;
+	private boolean winchToggle;
+	private boolean winchPressed;
 	
 	//Joystick helpers
 	private boolean stop;
 	private boolean reverseOrNah;
 	private boolean conveyorOrNah;
+	private boolean winchOrNah;
 		
 	// Network Table
 	private NetworkTable table;
@@ -87,16 +94,15 @@ public class Robot extends IterativeRobot {
 	private Preferences prefs;
 	
 	//Autonomous State
-	//int autonomousCase = C.Auto.SELF_CORRECT_DRIVE;
-	//final String case1Auto = "Straight";
-	//final String case2Auto = "Left";
-	//final String case3Auto = "Right";
-	//SendableChooser<String> chooser = new SendableChooser<>();
-	//String autoSelected;
+	int autonomousCase = C.Auto.SELF_CORRECT_DRIVE;
+	final String case1Auto = "Straight";
+	final String case2Auto = "Left";
+	final String case3Auto = "Right";
+	SendableChooser chooser;
+	String autoSelected;
 	
 	boolean reset = true; 
 
-	private PrintWriter pw;
 	
 	public Robot() {
         //initialize Drive System
@@ -118,11 +124,13 @@ public class Robot extends IterativeRobot {
 		//initialize Camera Objects 
 		server = CameraServer.getInstance();
 		visionCamera = new AxisCamera("visionCamera", "10.40.79.88");
+		usbCamera = new UsbCamera("usbCamera",0);
 		
 		
 		//set Camera Values;
 		visionCamera.setResolution(480, 360);
 		server.startAutomaticCapture(visionCamera);
+		server.startAutomaticCapture(usbCamera);
 		
 		//initialize Ultrasonic Sensor
 		sonicSensor = new LVMaxSonarEZUltrasonic(C.Port.SONIC_SENSOR_INPUT_PORT);
@@ -147,13 +155,17 @@ public class Robot extends IterativeRobot {
 		conveyorOrNah = false;
 		upDPadToggle = false;
 		downDPadToggle = false; 
-		//conveyorOrNah = false;
+		winchOrNah = false;
+		winchToggle = false;
 		
 		//Autonomous Chooser
-		//chooser.addDefault("Case 1 (Default)", case1Auto);
-		//chooser.addObject("Case 2: ", case2Auto);
-		//chooser.addObject("Case 3: ", case3Auto);
-		//SmartDashboard.putData("Auto choices", chooser);
+		chooser = new SendableChooser();
+		chooser.addDefault("Straight Case",  new String("hi"));
+		chooser.addObject("Left Case", new String ("bye"));
+		chooser.addObject("Right Case", new String ("lol"));
+		SmartDashboard.putData("Auto choices", chooser);
+		SmartDashboard.putBoolean("chooserexists", SmartDashboard.containsKey("Auto choices"));
+		//SmartDashboard.putString("blah", "blah");
 		
 		//initialize Preferences
 		prefs = Preferences.getInstance();
@@ -163,51 +175,32 @@ public class Robot extends IterativeRobot {
 		prefs.putDouble("Winch Motor Speed", 0);
 		prefs.putDouble("IsForward", 1);
 		
-		/*DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Calendar ca = Calendar.getInstance();
-		try {
-			//pw = new PrintWriter("debug" + df.format(ca) + ".txt", "UTF-8");
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		*/
-		
 	}
 
 	public void autonomousInit() {
-		//autoSelected = chooser.getSelected();
+		autoSelected = (String)chooser.getSelected();
 		timer.start();
 		resetEncoders();
 		reset = true;
 		
-		//talonDrive.getBackLeftDrive().changeControlMode(TalonControlMode.MotionMagic);
-		//talonDrive.getBackRightDrive().changeControlMode(TalonControlMode.MotionMagic);
-		
-		//talonDrive.getBackLeftDrive().setProfile(0);
-		//talonDrive.getBackRightDrive().setProfile(0);
-		
 		backLeft.changeControlMode(TalonControlMode.MotionProfile);
 		backRight.changeControlMode(TalonControlMode.MotionProfile);
 		
-		//if (autoSelected.equals(case1Auto)){
-			leftProfile = new MotionProfileExample (backLeft, LeftCase2.getUpdatedPoints()); //StraightCase1.getUpdatedPoints()
-			rightProfile = new MotionProfileExample (backRight, RightCase2.Points); //StraightCase1
-		//}
-			/*
+		if (autoSelected.equals(case1Auto)){
+			leftProfile = new MotionProfileExample (backLeft, StraightCase1.getUpdatedPoints());
+			rightProfile = new MotionProfileExample (backRight, StraightCase1.Points);
+		}
+	
 		else if (autoSelected.equals(case2Auto)){
-			leftProfile = new MotionProfileExample (backLeft, LeftCase2.Points);
-			rightProfile = new MotionProfileExample (backRight, RightCase2.Points);
-		}
+			leftProfile = new MotionProfileExample (backLeft, LeftCase2.getUpdatedPoints()); 
+			rightProfile = new MotionProfileExample (backRight, RightCase2.Points); 
+			}
+		
 		else if (autoSelected.equals(case3Auto)){
-			leftProfile = new MotionProfileExample (backLeft, LeftCase3.Points);
-			rightProfile = new MotionProfileExample (backRight, RightCase3.Points);
+			leftProfile = new MotionProfileExample (backLeft, RightCase2.Points);
+			rightProfile = new MotionProfileExample (backRight, LeftCase2.getUpdatedPoints());
 		}
-		*/
-
+		
 			rightProfile.startMotionProfile();
 			leftProfile.startMotionProfile();
 
@@ -215,11 +208,6 @@ public class Robot extends IterativeRobot {
 	}
 
 	public void autonomousPeriodic() {
-		//double distance = 7 * 10.71; //in ft multiplied by gear ratio
-		//double circumference = 0.5*Math.PI;
-		
-		//talonDrive.getBackLeftDrive().set(distance/circumference);
-		//talonDrive.getBackRightDrive().set(distance/circumference);
 		printEncoderValues();
 		
 		rightProfile.control();
@@ -230,33 +218,6 @@ public class Robot extends IterativeRobot {
 		
 		backRight.set(setOutputRight.value);
 		backLeft.set(setOutputLeft.value);
-		
-		
-		
-		/**SmartDashboard.putNumber(System.currentTimeMillis() + " BL:",talonDrive.getBackLeftDrive().getOutputCurrent());
-		SmartDashboard.putNumber(System.currentTimeMillis() + " BR:",talonDrive.getBackRightDrive().getOutputCurrent());
-		SmartDashboard.putNumber(System.currentTimeMillis() + " FL:",talonDrive.getFrontLeftDrive().getOutputCurrent());
-		SmartDashboard.putNumber(System.currentTimeMillis() + " FR:",talonDrive.getFrontRightDrive().getOutputCurrent());
-		 */
-		
-		/*
-		if (timer.get() < 0.6)
-		{
-			talonDrive.tankDrive(1*prefs.getDouble("IsForward", 1), 1*prefs.getDouble("IsForward", 1));
-			if (timer.get() > 0.5)
-			{
-				if (reset){
-					resetEncoders();
-					reset = false;
-				}
-				SmartDashboard.putNumber("Rotations Left: ", talonDrive.getBackLeftDrive().getEncPosition());
-				SmartDashboard.putNumber("Rotations Right: ", talonDrive.getBackRightDrive().getEncPosition());
-			}
-		}
-		
-		else 
-			talonDrive.tankDrive(0, 0);
-		*/
 		
 		
 		/*centerY = table.getNumberArray("centerY", defaultValue);
@@ -338,6 +299,7 @@ public class Robot extends IterativeRobot {
 		eStop1Pressed = pad.getBackButton();
 		reverseDirectionPressed = pad.getAButton();
 		conveyorPressed = pad.getYButton();
+		winchPressed = pad.getXButton();
 		
 		
 		if (eStop1Pressed)
@@ -372,13 +334,25 @@ public class Robot extends IterativeRobot {
 		else if (!conveyorOrNah)
 			conveyorMotor.set(0);
 		
+		//WINCH TOGGLE
+		if (winchPressed && !winchToggle)
+		{
+			winchToggle = true;
+			winchOrNah = !winchOrNah;
+		}
+		else if (!winchPressed)
+			winchToggle = false; 
+		
+		if (winchOrNah)
+			winchMotor.set(-1);
+		else if (!winchOrNah)
+			winchMotor.set(0);
+		
 		//WINCH CONTINUOUS 
 		if (pad.getRightBumper())
 			winchMotor.set(-1);
 		else if (pad.getLeftBumper())
 			winchMotor.set(1);
-		else 
-			winchMotor.set(0);
 		
 		//TEST
 		if (pad.checkDPad(0) && !upDPadToggle)
